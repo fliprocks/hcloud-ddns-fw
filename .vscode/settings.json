@@ -1,0 +1,18 @@
+{
+  "go.useLanguageServer": true,
+  "go.alternateTools": {
+    "gopls": "/home/vscode/.local/bin/gopls"
+  },
+  "go.toolsEnvVars": {
+    "GOPATH": "/hcloud-ddns-fw/.cache/go",
+    "GOMODCACHE": "/hcloud-ddns-fw/.cache/go/pkg/mod",
+    "GOCACHE": "/hcloud-ddns-fw/.cache/go-build"
+  },
+  "go.toolsGopath": "/hcloud-ddns-fw/.cache/go",
+  "[yaml]": {
+    "prettier.tabWidth": 2
+  },
+  "[dockercompose]": {
+    "prettier.tabWidth": 2
+  }
+}

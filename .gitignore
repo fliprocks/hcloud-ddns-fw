@@ -1,0 +1,10 @@
+**/.DS_Store
+**/.cache
+**/ipv4
+**/ipv6
+**/test
+
+.devcontainer/devcontainer.json
+
+config-dev.yaml
+compose-dev.yaml

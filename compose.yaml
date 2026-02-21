@@ -1,0 +1,15 @@
+services:
+  updater:
+    image: ghcr.io/fliprocks/hcloud-ddns-fw:latest
+    network_mode: host
+    mem_limit: 16M
+    environment:
+      HCLOUD_TOKEN: yourSecretHcloudToken
+      UPDATE_INTERVAL: 300
+      HTTP_TIMEOUT: 30
+      IP_MODE: Dual
+      LOGLEVEL: INFO
+      TZ: Europe/Berlin
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    restart: on-failure:5

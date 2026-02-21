@@ -1,0 +1,38 @@
+{
+  "name": "Go",
+  "image": "mcr.microsoft.com/devcontainers/go:2-1.25-trixie",
+  "shutdownAction": "none",
+  "workspaceFolder": "/hcloud-ddns-fw",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/hcloud-ddns-fw,type=bind",
+  "runArgs": ["--hostname", "go-devcontainer", "--name", "go-devcontainer"],
+  "postCreateCommand": "echo \"alias ll='ls -alF'\" >> ~/.bashrc",
+  "mounts": [
+    "type=bind,source=${env:HOME}/.ssh/id_ed25519,target=/home/vscode/.ssh/id_ed25519,readonly",
+    "type=bind,source=${env:HOME}/.gitconfig,target=/home/vscode/.gitconfig,readonly",
+    "type=bind,source=/run/host-services/ssh-auth.sock,target=/ssh-agent"
+  ],
+  "containerEnv": {
+    "GOPATH": "/hcloud-ddns-fw/.cache/go",
+    "GOMODCACHE": "/hcloud-ddns-fw/.cache/go/pkg/mod",
+    "GOCACHE": "/hcloud-ddns-fw/.cache/go-build",
+    "SSH_AUTH_SOCK": "/ssh-agent",
+    "HCLOUD_TOKEN": "${env:HCLOUD_TOKEN}",
+    "LOGLEVEL": "INFO",
+    "TZ": "Europe/Berlin",
+    "UPDATE_INTERVAL": "300",
+    "IP_MODE": "IPv4",
+    "HTTP_TIMEOUT": "30",
+    "DEVMODE": "true"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "eamodio.gitlens",
+        "golang.go",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}

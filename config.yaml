@@ -1,0 +1,41 @@
+dns-zones:
+  - zone-name: example.com
+    records:
+      - type: A
+        name: test
+        ttl: 120
+        comment: Just a test
+      - type: AAAA
+        name: test2
+        ttl: 60
+        comment: Another test
+  - zone-name: bar.com
+    records:
+      - type: A
+        name: foo
+        ttl: 120
+        comment: Foo bar
+
+firewalls:
+  - id: 123456789
+    fw-rules:
+      - description: http
+        direction: in
+        port: 80
+        protocol: tcp
+        ipv4mask: 32
+        ipv6mask: 64
+      - description: https
+        direction: in
+        port: 443
+        protocol: tcp
+        ipv4mask: 32
+        ipv6mask: 64
+  - id: 987654321
+    fw-rules:
+      - description: ssh
+        direction: in
+        port: 22
+        protocol: tcp
+        ipv4mask: 32
+        ipv6mask: 128
