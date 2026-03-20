@@ -85,7 +85,7 @@ services:
       TZ: Europe/Berlin
     volumes:
       - ./config.yaml:/app/config.yaml
-    restart: on-failure:5
+    restart: always
 ```
 
 #### `HCLOUD_TOKEN:`
@@ -189,7 +189,9 @@ export HCLOUD_TOKEN=yourSecretHcloudToken
 2. Navigate to `Firewalls`
 3. Click on desired Firewall
 4. Check the Browsers URL
+   <br>
    ![](./docs/fwid.png)
+   <br>
    The highlighted <b style="color:#22D081;">123456789</b> represents your Firewall id.
 
 ## Deploy the services
@@ -215,7 +217,7 @@ docker run \
    -e LOGLEVEL=INFO \
    -e TZ=Europe/Berlin \
    -v ./config.yaml:/app/config.yaml \
-   --restart on-failure:5 \
+   --restart always \
    -m 16M \
    -d \
    ghcr.io/fliprocks/hcloud-ddns-fw:latest

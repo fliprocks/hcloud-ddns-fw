@@ -32,7 +32,7 @@ func NewIPChecker(logger *slog.Logger) (*IPChecker, error) {
 	}, nil
 }
 
-func (u *IPChecker) checkIP(apiURL string) (string, error) {
+func (u *IPChecker) checkIP(apiURL string) string {
 	client := &http.Client{
 		Timeout: time.Duration(u.HttpTimeout) * time.Second,
 	}
@@ -40,21 +40,23 @@ func (u *IPChecker) checkIP(apiURL string) (string, error) {
 	res, err := client.Get(apiURL)
 	if err != nil {
 		u.logger.Error("Error while fetching current IP address", "err", err)
-		return "", err
+		return ""
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Unexpected HTTP status %d from %s", res.StatusCode, apiURL)
+		u.logger.Error("Unexpected HTTP status", "err", res.StatusCode)
+
+		return ""
 	}
 
 	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		u.logger.Error("Error reading the IP response", "err", err)
-		return "", err
+		return ""
 	}
 
-	return strings.TrimSpace(string(b)), nil
+	return strings.TrimSpace(string(b))
 }
 
 func (u *IPChecker) writeFile(path, content string) error {
@@ -125,10 +127,7 @@ func (u *IPChecker) CheckForChanges() (changed bool, err error) {
 	var changedV6 bool
 
 	if ipv4 {
-		ip, err := u.checkIP("https://api.ipify.org")
-		if err != nil {
-			return false, err
-		}
+		ip := u.checkIP("https://api.ipify.org")
 
 		changedV4, err = u.compareIPs(filepath.Join(stateDir(), "ipv4"), ip)
 		if err != nil {
@@ -138,10 +137,7 @@ func (u *IPChecker) CheckForChanges() (changed bool, err error) {
 	}
 
 	if ipv6 {
-		ip, err := u.checkIP("https://api6.ipify.org")
-		if err != nil {
-			return false, err
-		}
+		ip := u.checkIP("https://api6.ipify.org")
 
 		changedV6, err = u.compareIPs(filepath.Join(stateDir(), "ipv6"), ip)
 		if err != nil {

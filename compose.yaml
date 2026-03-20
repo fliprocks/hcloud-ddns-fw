@@ -12,4 +12,4 @@ services:
       TZ: Europe/Berlin
     volumes:
       - ./config.yaml:/app/config.yaml
-    restart: on-failure:5
+    restart: always

@@ -1,4 +1,4 @@
-# Reporting a Vulnerability
+# Report a vulnerability
 
 We take security vulnerabilities seriously and appreciate your efforts to responsibly disclose your findings. We will make every effort to acknowledge your contributions.
 
