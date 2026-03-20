@@ -7,7 +7,7 @@
   "postCreateCommand": "echo \"alias ll='ls -alF'\" >> ~/.bashrc",
   "mounts": [
     "type=bind,source=${env:HOME}/.ssh/id_ed25519,target=/home/vscode/.ssh/id_ed25519,readonly",
-    "type=bind,source=${env:HOME}/.gitconfig,target=/home/vscode/.gitconfig,readonly",
+    "type=bind,source=${env:HOME}/.gitconfig-github-fliprocks,target=/home/vscode/.gitconfig,readonly",
     "type=bind,source=/run/host-services/ssh-auth.sock,target=/ssh-agent"
   ],
   "containerEnv": {

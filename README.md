@@ -42,7 +42,7 @@ dns-zones:
       - type: A              # Record type A or AAAA
         name: test           # Name -> test.example.com
         ttl: 300             # TTL (3600 if not set)
-        comment: My comment  # A custom comment (optional)
+        comment: Comment     # A custom comment (optional)
 ```
 
 You can use multiple records in multiple different DNS zones.
