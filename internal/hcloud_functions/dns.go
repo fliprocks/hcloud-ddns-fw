@@ -13,8 +13,14 @@ import (
 func mapRecordTypeAndIp(t, ipv4, ipv6 string) (hcloud.ZoneRRSetType, string, error) {
 	switch strings.ToUpper(t) {
 	case "A":
+		if strings.TrimSpace(ipv4) == "" {
+			return "", "", fmt.Errorf("missing IPv4 address for record type A")
+		}
 		return hcloud.ZoneRRSetTypeA, ipv4, nil
 	case "AAAA":
+		if strings.TrimSpace(ipv6) == "" {
+			return "", "", fmt.Errorf("missing IPv6 address for record type AAAA")
+		}
 		return hcloud.ZoneRRSetTypeAAAA, ipv6, nil
 	default:
 		return "", "", fmt.Errorf("Unsupported record type: %s", t)
@@ -29,7 +35,6 @@ func SetRecord(z config.DNSZone, r config.Record, ipv4, ipv6, token string, t in
 	}
 
 	client := hcloud.NewClient(hcloud.WithToken(token))
-	
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(t) * time.Second)
 	defer cancel()
 
@@ -64,7 +69,6 @@ func SetTTL(z config.DNSZone, r config.Record, token string, t int64) (*hcloud.R
 	}
 
 	client := hcloud.NewClient(hcloud.WithToken(token))
-	
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(t) * time.Second)
 	defer cancel()
 

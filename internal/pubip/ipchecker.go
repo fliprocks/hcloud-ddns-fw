@@ -20,43 +20,57 @@ type IPChecker struct {
 }
 
 func NewIPChecker(logger *slog.Logger) (*IPChecker, error) {
-
 	timeout, err := strconv.ParseInt(os.Getenv("HTTP_TIMEOUT"), 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("Invalid HTTP_TIMEOUT: %w", err)
 	}
 
-	return &IPChecker{
+	ipc := &IPChecker{
 		logger:      logger,
 		HttpTimeout: timeout,
-	}, nil
+	}
+
+	if ip, err := ipc.readStoredIP(filepath.Join(stateDir(), "ipv4")); err == nil {
+		ipc.IPv4 = ip
+	}
+
+	if ip, err := ipc.readStoredIP(filepath.Join(stateDir(), "ipv6")); err == nil {
+		ipc.IPv6 = ip
+	}
+
+	return ipc, nil
 }
 
-func (u *IPChecker) checkIP(apiURL string) string {
+func (u *IPChecker) checkIP(apiURL string) (string, error) {
 	client := &http.Client{
 		Timeout: time.Duration(u.HttpTimeout) * time.Second,
 	}
 
 	res, err := client.Get(apiURL)
 	if err != nil {
-		u.logger.Error("Error while fetching current IP address", "err", err)
-		return ""
+		return "", err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		u.logger.Error("Unexpected HTTP status", "err", res.StatusCode)
-
-		return ""
+		return "", fmt.Errorf("unexpected HTTP status: %d", res.StatusCode)
 	}
 
 	b, err := io.ReadAll(res.Body)
 	if err != nil {
-		u.logger.Error("Error reading the IP response", "err", err)
-		return ""
+		return "", err
 	}
 
-	return strings.TrimSpace(string(b))
+	return strings.TrimSpace(string(b)), nil
+}
+
+func (u *IPChecker) readStoredIP(path string) (string, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(b)), nil
 }
 
 func (u *IPChecker) writeFile(path, content string) error {
@@ -127,23 +141,31 @@ func (u *IPChecker) CheckForChanges() (changed bool, err error) {
 	var changedV6 bool
 
 	if ipv4 {
-		ip := u.checkIP("https://api.ipify.org")
-
-		changedV4, err = u.compareIPs(filepath.Join(stateDir(), "ipv4"), ip)
-		if err != nil {
-			return false, err
+		ip, fetchErr := u.checkIP("https://api.ipify.org")
+		if fetchErr != nil {
+			u.logger.Error("Error while fetching current IP address", "family", "ipv4", "err", fetchErr)
+			u.logger.Warn("Keeping last known IP address", "family", "ipv4", "ip", u.IPv4)
+		} else {
+			changedV4, err = u.compareIPs(filepath.Join(stateDir(), "ipv4"), ip)
+			if err != nil {
+				return false, err
+			}
+			u.IPv4 = ip
 		}
-		u.IPv4 = ip
 	}
 
 	if ipv6 {
-		ip := u.checkIP("https://api6.ipify.org")
-
-		changedV6, err = u.compareIPs(filepath.Join(stateDir(), "ipv6"), ip)
-		if err != nil {
-			return false, err
+		ip, fetchErr := u.checkIP("https://api6.ipify.org")
+		if fetchErr != nil {
+			u.logger.Error("Error while fetching current IP address", "family", "ipv6", "err", fetchErr)
+			u.logger.Warn("Keeping last known IP address", "family", "ipv6", "ip", u.IPv6)
+		} else {
+			changedV6, err = u.compareIPs(filepath.Join(stateDir(), "ipv6"), ip)
+			if err != nil {
+				return false, err
+			}
+			u.IPv6 = ip
 		}
-		u.IPv6 = ip
 	}
 
 	if changedV4 || changedV6 {
