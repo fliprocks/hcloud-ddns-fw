@@ -150,6 +150,28 @@ TZ: Europe/Berlin
 # type: string
 ```
 
+#### `IPv4_API_URL` \*optional
+
+Add a different or own API endpoint to fetch the IPv4 address from. Leave blank or don`t set to use https://api.ipify.org
+
+```bash
+IPv4_API_URL: https://api.example/ipv4
+# type: string
+```
+
+**Important:** Responses must be plain text like `123.123.123.123`
+
+#### `IPv6_API_URL` \*optional
+
+Add a different or own API endpoint to fetch the IPv6 address from. Leave blank or don`t set to use https://api6.ipify.org
+
+```bash
+IPv6_API_URL: https://api.example/ipv6
+# type: string
+```
+
+**Important:** Responses must be plain text like `1234:5678:90ab:cdef:1234:5678:90ab:cdef`
+
 ## How to create a hcloud token
 
 To create a hcloud token, follow the steps as described [here](https://docs.hetzner.com/cloud/api/getting-started/generating-api-token/). The token will require **Read & Write** permissions.
