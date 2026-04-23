@@ -10,8 +10,6 @@ services:
       IP_MODE: Dual
       LOGLEVEL: INFO
       TZ: Europe/Berlin
-      IPv4_API_URL:
-      IPv6_API_URL:
     volumes:
       - ./config.yaml:/app/config.yaml
     restart: always
