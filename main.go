@@ -25,7 +25,7 @@ func main() {
 
 			if err != nil {
 				logger.Error("Error executing command", "err", err)
-				os.Exit(0)
+				os.Exit(1)
 			}
 
 			fmt.Println("Firewalls:")
@@ -37,53 +37,52 @@ func main() {
 
 		default:
 			logger.Error("unknown command", "cmd", os.Args[1])
-			os.Exit(0)
+			os.Exit(1)
 		}
 	}
 
 	if os.Getenv("HCLOUD_TOKEN") == "" {
 		logger.Error("No HCLOUD_TOKEN provided. Stopping service...")
-		os.Exit(0)
+		os.Exit(1)
 	}
 
 	if os.Getenv("IP_MODE") == "" {
 		logger.Error("No IP_MODE provided. Stopping service...")
-		os.Exit(0)
+		os.Exit(1)
 	}
 
 	cfg, err := config.NewConfig(logger)
 	if err != nil {
 		logger.Error("Stopping service due to errors in the config file", "err", err)
-		os.Exit(0)
+		os.Exit(1)
 	}
 	logger.Debug("Config", "cfg", cfg)
 
 	ipc, err := pubip.NewIPChecker(logger)
   	if err != nil {
 		logger.Error("Error creating IPChecker", "err", err)
-		os.Exit(0)
+		os.Exit(1)
     }
 
 	upd, err := internal.NewUpdater(logger, cfg, ipc)
 	if err != nil {
 		logger.Error("Error creating Updater", "err", err)
-		os.Exit(0)
+		os.Exit(1)
     }
 
 	i, err := strconv.ParseInt(os.Getenv("UPDATE_INTERVAL"), 10, 64)
     if err != nil {
 		logger.Error("Invalid UPDATE_INTERVAL", "err", err)
-		os.Exit(0)
+		os.Exit(1)
     }
 
 	success := false
 
 	for true {
 		changed, err := ipc.CheckForChanges()
-
 		if err != nil {
 			logger.Error("Stopping service due to errors", "err", err)
-			os.Exit(0)
+			os.Exit(1)
 		}
 		
 		if changed || !success {

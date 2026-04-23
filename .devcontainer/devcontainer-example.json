@@ -1,14 +1,13 @@
 {
   "name": "Go",
   "image": "mcr.microsoft.com/devcontainers/go:2-1.25-trixie",
-  "shutdownAction": "none",
   "workspaceFolder": "/hcloud-ddns-fw",
   "workspaceMount": "source=${localWorkspaceFolder},target=/hcloud-ddns-fw,type=bind",
   "runArgs": ["--hostname", "go-devcontainer", "--name", "go-devcontainer"],
   "postCreateCommand": "echo \"alias ll='ls -alF'\" >> ~/.bashrc",
   "mounts": [
-    "type=bind,source=${env:HOME}/.ssh/id_ed25519,target=/home/vscode/.ssh/id_ed25519,readonly",
-    "type=bind,source=${env:HOME}/.gitconfig,target=/home/vscode/.gitconfig,readonly",
+    "type=bind,source=${localEnv:HOME}/.ssh/id_ed25519,target=/home/vscode/.ssh/id_ed25519,readonly",
+    "type=bind,source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,readonly",
     "type=bind,source=/run/host-services/ssh-auth.sock,target=/ssh-agent"
   ],
   "containerEnv": {
