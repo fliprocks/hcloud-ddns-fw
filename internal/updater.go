@@ -85,7 +85,7 @@ func (u *Updater) Update() bool {
 			if errDns != nil {
 				u.logger.Error("Failed to update DNS record", "err", errDns)
 				success = false
-				if 400 <= res.StatusCode && res.StatusCode < 500 {
+				if res != nil && 400 <= res.StatusCode && res.StatusCode < 500 {
 					u.logger.Error("Invalid config file. Stopping service...")
 					os.Exit(0)
 				}

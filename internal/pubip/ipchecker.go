@@ -141,7 +141,12 @@ func (u *IPChecker) CheckForChanges() (changed bool, err error) {
 	var changedV6 bool
 
 	if ipv4 {
-		ip, fetchErr := u.checkIP("https://api.ipify.org")
+		ipv4ApiEndpoint := os.Getenv("IPv4_API_URL")
+		if ipv4ApiEndpoint == "" {
+			ipv4ApiEndpoint = "https://api.ipify.org"
+		}
+
+		ip, fetchErr := u.checkIP(ipv4ApiEndpoint)
 		if fetchErr != nil {
 			u.logger.Error("Error while fetching current IP address", "family", "ipv4", "err", fetchErr)
 			u.logger.Warn("Keeping last known IP address", "family", "ipv4", "ip", u.IPv4)
@@ -155,7 +160,12 @@ func (u *IPChecker) CheckForChanges() (changed bool, err error) {
 	}
 
 	if ipv6 {
-		ip, fetchErr := u.checkIP("https://api6.ipify.org")
+		ipv6ApiEndpoint := os.Getenv("IPv6_API_URL")
+		if ipv6ApiEndpoint == "" {
+			ipv6ApiEndpoint = "https://api6.ipify.org"
+		}
+
+		ip, fetchErr := u.checkIP(ipv6ApiEndpoint)
 		if fetchErr != nil {
 			u.logger.Error("Error while fetching current IP address", "family", "ipv6", "err", fetchErr)
 			u.logger.Warn("Keeping last known IP address", "family", "ipv6", "ip", u.IPv6)
