@@ -1,6 +1,6 @@
 # hcloud-ddns-fw
 
-This tool is a simple microservice which allows you to update your hcloud DNS records and Firewall rules. I built this, because I needed to restrict Firewall rules to specific IPs or networks, which have dynamic IP addresses. So in other words, this is DynDNS updater which can set Firewall rules for dynamic IP addresses too.
+This tool is a simple microservice which allows you to update your hcloud DNS records and Firewall rules. I built this, because I needed to restrict Firewall rules to specific IPs or networks, which have dynamic IP addresses. So in other words, this is DDNS updater which can set Firewall rules for dynamic IP addresses too.
 
 Besides this, I alway wanted to learn [Go](https://go.dev/), so I thought this could be a great first project.
 
@@ -75,7 +75,7 @@ services:
   updater:
     image: hcloud-ddns-fw:latest
     network_mode: host
-    mem_limit: 16M
+    mem_limit: 32M
     environment:
       HCLOUD_TOKEN: yourSecretHcloudToken
       UPDATE_INTERVAL: 300
@@ -88,6 +88,8 @@ services:
     restart: always
 ```
 
+Further examples can be found [in this](./examples/) directory.
+
 #### `HCLOUD_TOKEN:`
 
 hcloud API token. ‼️ **This token is mighty. Handle with care.** ‼️
@@ -97,13 +99,82 @@ HCLOUD_TOKEN: yourSecretHcloudToken
 # type: string
 ```
 
+#### `TRIGGER:`
+
+Trigger that controls the update process. Available options are:
+
+- `interval` look for IP changes after seconds configured in `UPDATE_INTERVAL`
+- `updateUrl` use a DDNS update URL
+
+```bash
+TRIGGER: interval
+# type: string
+```
+
 #### `UPDATE_INTERVAL`
 
-Interval in seconds to check for IP address changes.
+Interval in seconds to check for IP address changes. Active only when `interval` is used in `TRIGGER` environment variable.
 
 ```bash
 UPDATE_INTERVAL: 300
 # type: int
+```
+
+#### `IP_ADDRESS_SRC`
+
+Source where to get the IP addresses from. Available options are:
+
+- `api_url` use default or provided IP API endpoint(s)
+- `ddns_update_url` use DDNS update URL
+
+```bash
+IP_UPDATE_SRC: 300
+# type: string
+```
+
+#### `IPv4_PARAM_IDENTIFYER`
+
+Identifier to identify IPv4 Address in DDNS update URL.
+
+```bash
+IPv4_PARAM_IDENTIFYER: ip4
+# type: string
+```
+
+#### `IPv6_PARAM_PREFIX_IDENTIFYER`
+
+Identifier to identify IPv6 prefix in DDNS update URL.
+
+```bash
+IPv6_PARAM_PREFIX_IDENTIFYER: prefix
+# type: string
+```
+
+#### `IPv6_PREFIX_LENGTH`
+
+IPv6 prefix length. Might differ depending on the network architecture.
+
+```bash
+IPv6_PREFIX_LENGTH: 56
+# type: string
+```
+
+#### `IPv6_PREFIX_ID`
+
+Prefix-ID if available.
+
+```bash
+IPv6_PREFIX_ID: bc
+# type: string
+```
+
+#### `IPv6_INTERFACE-ID`
+
+Interface ID of the NIC. Basically the second half of an IPv6 address such as 2a24:b19c:d942:b8bc:**66ec:face:7324:81ea**
+
+```bash
+INTERFACE-ID: 66ec:face:7324:81ea
+# type: string
 ```
 
 #### `HTTP_TIMEOUT`

@@ -46,9 +46,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	if os.Getenv("TRIGGER") == "" {
+		logger.Info("No TRIGGER provided. Use default setting \"interval\" as trigger")
+	}
+
 	if os.Getenv("IP_MODE") == "" {
 		logger.Error("No IP_MODE provided. Stopping service...")
 		os.Exit(1)
+	}
+
+	if os.Getenv("IPv4_API_URL") == "" {
+		logger.Info("No IPv4_API_URL provided. Use default setting \"https://api.ipify.org\" as IPv4 API URL")
+	}
+
+	if os.Getenv("IPv6_API_URL") == "" {
+		logger.Info("No IPv6_API_URL provided. Use default setting \"https://api6.ipify.org\" as IPv6 API URL")
 	}
 
 	cfg, err := config.NewConfig(logger)
@@ -70,6 +82,7 @@ func main() {
 		os.Exit(1)
     }
 
+	// highlight-todo: needs to be updated
 	i, err := strconv.ParseInt(os.Getenv("UPDATE_INTERVAL"), 10, 64)
     if err != nil {
 		logger.Error("Invalid UPDATE_INTERVAL", "err", err)

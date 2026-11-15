@@ -2,7 +2,7 @@ services:
   updater:
     image: ghcr.io/fliprocks/hcloud-ddns-fw:latest
     network_mode: host
-    mem_limit: 16M
+    mem_limit: 32M
     environment:
       HCLOUD_TOKEN: yourSecretHcloudToken
       UPDATE_INTERVAL: 300
