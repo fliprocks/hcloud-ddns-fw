@@ -5,6 +5,10 @@
 **/test
 
 .devcontainer/devcontainer.json
+.devcontainer/devcontainer-lock.json
 
 config-dev.yaml
 compose-dev.yaml
+
+ideas.md
+AGENTS.md
