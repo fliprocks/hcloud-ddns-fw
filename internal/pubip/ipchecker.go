@@ -121,20 +121,54 @@ func stateDir() string {
 	return "/tmp/hcloud-ddns-fw"
 }
 
-func (u *IPChecker) CheckForChanges() (changed bool, err error) {
-	var ipv4 bool
-	var ipv6 bool
-
+// ipFamilies returns which address families are enabled by IP_MODE.
+func ipFamilies() (ipv4, ipv6 bool, err error) {
 	switch strings.ToLower(os.Getenv("IP_MODE")) {
 	case "ipv4":
-		ipv4 = true
+		return true, false, nil
 	case "ipv6":
-		ipv6 = true
+		return false, true, nil
 	case "dual":
-		ipv4 = true
-		ipv6 = true
+		return true, true, nil
 	default:
-		return false, fmt.Errorf("invalid IP_MODE: %q (use IPv4, IPv6, or Dual)", os.Getenv("IP_MODE"))
+		return false, false, fmt.Errorf("invalid IP_MODE: %q (use IPv4, IPv6, or Dual)", os.Getenv("IP_MODE"))
+	}
+}
+
+// SetFromExternal stores IP addresses supplied by an external source (e.g. a
+// DDNS update URL) instead of fetching them from an IP API. Families disabled by
+// IP_MODE are ignored, and an empty value keeps the last known address.
+func (u *IPChecker) SetFromExternal(ipv4, ipv6 string) (changed bool, err error) {
+	useV4, useV6, err := ipFamilies()
+	if err != nil {
+		return false, err
+	}
+
+	if useV4 && ipv4 != "" {
+		c, err := u.compareIPs(filepath.Join(stateDir(), "ipv4"), ipv4)
+		if err != nil {
+			return false, err
+		}
+		u.IPv4 = ipv4
+		changed = changed || c
+	}
+
+	if useV6 && ipv6 != "" {
+		c, err := u.compareIPs(filepath.Join(stateDir(), "ipv6"), ipv6)
+		if err != nil {
+			return false, err
+		}
+		u.IPv6 = ipv6
+		changed = changed || c
+	}
+
+	return changed, nil
+}
+
+func (u *IPChecker) CheckForChanges() (changed bool, err error) {
+	ipv4, ipv6, err := ipFamilies()
+	if err != nil {
+		return false, err
 	}
 
 	var changedV4 bool

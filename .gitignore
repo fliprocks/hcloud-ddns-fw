@@ -7,8 +7,8 @@
 .devcontainer/devcontainer.json
 .devcontainer/devcontainer-lock.json
 
+.env
 config-dev.yaml
 compose-dev.yaml
 
-ideas.md
-AGENTS.md
+*test.go
