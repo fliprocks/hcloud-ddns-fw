@@ -1,4 +1,4 @@
-FROM golang:1.26-trixie AS builder
+FROM golang:1.27-trixie AS builder
 
 WORKDIR /go/src/app
 
@@ -17,6 +17,8 @@ RUN apk add --no-cache tzdata ca-certificates
 COPY  --from=builder /go/bin/hcloud-ddns-fw .
 
 COPY ./LICENSE ./THIRD_PARTY_LICENSES ./
+
+ENV IP_STATE_DIR=/app/state
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD pgrep -x /app/hcloud-ddns-fw >/dev/null || exit 1

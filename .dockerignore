@@ -8,6 +8,8 @@ test
 .gitignore
 .prettierrc
 compose.yaml
+.env
+env.example
 compose-dev.yaml
 config.yaml
 config-dev.yaml

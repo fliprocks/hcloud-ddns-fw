@@ -5,6 +5,10 @@
 **/test
 
 .devcontainer/devcontainer.json
+.devcontainer/devcontainer-lock.json
 
+.env
 config-dev.yaml
 compose-dev.yaml
+
+*test.go

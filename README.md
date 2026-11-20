@@ -1,6 +1,6 @@
 # hcloud-ddns-fw
 
-This tool is a simple microservice which allows you to update your hcloud DNS records and Firewall rules. I built this, because I needed to restrict Firewall rules to specific IPs or networks, which have dynamic IP addresses. So in other words, this is DynDNS updater which can set Firewall rules for dynamic IP addresses too.
+This tool is a simple microservice which allows you to update your hcloud DNS records and Firewall rules. I built this, because I needed to restrict Firewall rules to specific IPs or networks, which have dynamic IP addresses. So in other words, this is DDNS updater which can set Firewall rules for dynamic IP addresses too.
 
 Besides this, I alway wanted to learn [Go](https://go.dev/), so I thought this could be a great first project.
 
@@ -22,155 +22,8 @@ Basically, all Firewall features are supported, except port ranges (at the momen
 
 ## Workflow
 
-1. The updater checks your public IP(s) in a given interval against https://ipify.org
+1. The updater checks your public IP(s) in a given interval against https://ipify.org (or a custom endpoint), or receives them via a [DDNS update URL](#ddns-update-url)
 2. An update will be started if a changed IP address is detected
-
-## Configuration
-
-The tool is designed to run in a Docker container. It uses less than 10 MB memory and does not have high CPU peaks. Anyways, you can also build a Go updater running outside a container.
-
-To configure the updater, you will need to customize the [compose.yaml](./compose.yaml) and [config.yaml](./config.yaml) according to your needs. Following configuration options are available.
-
-### DNS
-
-Following structure is required for DNS records:
-
-```yaml
-dns-zones:
-  - zone-name: example.com   # DNS zone name
-    records:
-      - type: A              # Record type A or AAAA
-        name: test           # Name -> test.example.com
-        ttl: 300             # TTL (3600 if not set)
-        comment: Comment     # A custom comment (optional)
-```
-
-You can use multiple records in multiple different DNS zones.
-
-### Firewall
-
-This structure is required for Firewalls:
-
-```yaml
-firewalls:
-  - id: 123456789            # hcloud Firewall id
-    fw-rules:
-      - description: ssh     # Description (optional but recommended)
-        direction: in        # Direction in or out
-        port: 22             # Port
-        protocol: tcp        # Protocol
-        ipv4mask: 32         # CIDR for IPv4 address (32 if not set)
-        ipv6mask: 64         # CIDR for IPv6 address (128 if not set)
-```
-
-You can manage multiple rules on multiple different Firewalls. Also see following topics:
-
-- How to retrieve the Firewall id? -> see below
-- [Introduction to CIDR](https://blog.ip2location.com/knowledge-base/a-comprehensive-guide-to-ipv4-and-ipv6-cidr/)
-
-### Docker compose settings
-
-```yaml
-services:
-  updater:
-    image: hcloud-ddns-fw:latest
-    network_mode: host
-    mem_limit: 16M
-    environment:
-      HCLOUD_TOKEN: yourSecretHcloudToken
-      UPDATE_INTERVAL: 300
-      HTTP_TIMEOUT: 30
-      IP_MODE: IPv4
-      LOGLEVEL: INFO
-      TZ: Europe/Berlin
-    volumes:
-      - ./config.yaml:/app/config.yaml
-    restart: always
-```
-
-#### `HCLOUD_TOKEN:`
-
-hcloud API token. ‼️ **This token is mighty. Handle with care.** ‼️
-
-```bash
-HCLOUD_TOKEN: yourSecretHcloudToken
-# type: string
-```
-
-#### `UPDATE_INTERVAL`
-
-Interval in seconds to check for IP address changes.
-
-```bash
-UPDATE_INTERVAL: 300
-# type: int
-```
-
-#### `HTTP_TIMEOUT`
-
-Timeout for http requests, used for fetching your public IP address and to run updates on hcloud DNS records or Firewalls. Don't set this to low, since the updater will also check for success within the same ongoing period.
-
-```bash
-HTTP_TIMEOUT: 30
-# type: int
-```
-
-#### `IP_MODE`
-
-Select IP mode to be used. Available options are:
-
-- `IPv4` only use IPv4
-- `IPv6` only use IPv6
-- `Dual` use both IPv4 and IPv6
-
-```bash
-IP_MODE: IPv4
-# type: string
-```
-
-#### `LOGLEVEL`
-
-Log level of the updater. Available options are:
-
-- `ERROR`
-- `INFO` default setting
-- `DEBUG`
-
-```bash
-LOGLEVEL: INFO
-# type: string
-```
-
-#### `TZ`
-
-Time zone setting. Also see [https://utctime.info/timezone/](https://utctime.info/timezone/).
-
-```bash
-TZ: Europe/Berlin
-# type: string
-```
-
-#### `IPv4_API_URL` \*optional
-
-Add a different or own API endpoint to fetch the IPv4 address from. Leave blank or don`t set to use https://api.ipify.org
-
-```bash
-IPv4_API_URL: https://api.example/ipv4
-# type: string
-```
-
-**Important:** Responses must be plain text like `123.123.123.123`
-
-#### `IPv6_API_URL` \*optional
-
-Add a different or own API endpoint to fetch the IPv6 address from. Leave blank or don`t set to use https://api6.ipify.org
-
-```bash
-IPv6_API_URL: https://api.example/ipv6
-# type: string
-```
-
-**Important:** Responses must be plain text like `1234:5678:90ab:cdef:1234:5678:90ab:cdef`
 
 ## How to create a hcloud token
 
@@ -178,7 +31,7 @@ To create a hcloud token, follow the steps as described [here](https://docs.hetz
 
 ‼️ **This token is mighty. Handle with care.** ‼️
 
-## How to retrieve the Firewall id
+## How to retrieve the Firewall id (optional)
 
 ### Use a command
 
@@ -188,14 +41,6 @@ Start the Docker container or the Go binary using the following command:
 
 ```bash
 docker run --rm -e HCLOUD_TOKEN=yourSecretHcloudToken ghcr.io/fliprocks/hcloud-ddns-fw:latest list-firewalls
-```
-
-#### `docker compose`
-
-```bash
-docker compose up -d
-docker exec hcloud-ddns-fw-updater-1 /app/hcloud-ddns-fw list-firewalls
-docker compose down
 ```
 
 #### Go binary (you will need to build this first)
@@ -216,11 +61,15 @@ export HCLOUD_TOKEN=yourSecretHcloudToken
    <br>
    The highlighted <b style="color:#22D081;">123456789</b> represents your Firewall id.
 
+## Configuration
+
+See [configuration.md](./configuration.md) and the [env.example](./env.example) file.
+
 ## Deploy the services
 
 ### Docker compose
 
-The easiest way to deploy the service is using the [compose.yaml](./compose.yaml) and [config.yaml](./config.yaml) from this repository.
+The easiest way to deploy the service is using the [compose.yaml](./compose.yaml), [env.example](./env.example) and [config.yaml](./config.yaml) from this repository. Copy `env.example` to `.env` and adjust the settings.
 
 ```bash
 docker compose up -d
@@ -240,7 +89,7 @@ docker run \
    -e TZ=Europe/Berlin \
    -v ./config.yaml:/app/config.yaml \
    --restart always \
-   -m 16M \
+   -m 32M \
    -d \
    ghcr.io/fliprocks/hcloud-ddns-fw:latest
 ```
@@ -256,6 +105,7 @@ export HTTP_TIMEOUT=30
 export IP_MODE=IPv4
 export LOGLEVEL=INFO
 export TZ=Europe/Berlin
+# export further env vars...
 ./hcloud-ddns-fw
 ```
 
@@ -283,7 +133,7 @@ docker build -t hcloud-ddns-fw:<your tag> .
 
 ### Build Go binary
 
-Prerequisite: Go 1.25 ist installed
+Prerequisite: Go 1.27 ist installed
 
 ```bash
 git clone https://github.com/fliprocks/hcloud-ddns-fw.git
@@ -321,9 +171,14 @@ Contributions are welcome. Also see [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md) for 
 
 The easiest was is using a dev container. For this, you can use [devcontainer-example.json](./.devcontainer/devcontainer-example.json), customize it according to your needs and rename it do _devcontainer.json_. You will also need to export `HCLOUD_TOKEN` on your host system. Additionally, create a _config-dev.yaml_ file with DNS records and Firewall rules to be used for your development. Make sure `DEVMODE` is set to `true` in [devcontainer-example.json](./.devcontainer/devcontainer-example.json).
 
-## Unaffiliated with Hetzner
+### Ideas for future development
 
-hcloud-ddns-fw is neither related nor supported by [Hetzner](https://hetzner.com).
+- Notifikations e.g. to ntfy
+- Trigger further webhooks
+
+## Unaffiliated with Hetzner or FRITZ!
+
+hcloud-ddns-fw is neither related nor supported by [Hetzner](https://hetzner.com) or [FRITZ!](https://fritz.com/).
 
 ## Liability
 

@@ -106,7 +106,7 @@ func (u *Updater) Update() bool {
 			if errTtl != nil {
 				u.logger.Error("Failed to update TTL", "err", errTtl)
 				success = false
-				if 400 <= res.StatusCode && res.StatusCode < 500 {
+				if res != nil && 400 <= res.StatusCode && res.StatusCode < 500 {
 					u.logger.Error("Invalid config file. Stopping service...")
 					os.Exit(0)
 				}
@@ -178,7 +178,7 @@ func (u *Updater) Update() bool {
 		if err != nil {
 			u.logger.Error("Failed to update Firewall", "err", err)
 			success = false
-			if 400 <= res.StatusCode && res.StatusCode < 500 {
+			if res != nil && 400 <= res.StatusCode && res.StatusCode < 500 {
 				u.logger.Error("Invalid config file. Stopping service...")
 				os.Exit(0)
 			}

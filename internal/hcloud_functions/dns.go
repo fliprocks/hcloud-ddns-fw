@@ -10,21 +10,32 @@ import (
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 )
 
-func mapRecordTypeAndIp(t, ipv4, ipv6 string) (hcloud.ZoneRRSetType, string, error) {
+func mapRecordType(t string) (hcloud.ZoneRRSetType, error) {
 	switch strings.ToUpper(t) {
 	case "A":
-		if strings.TrimSpace(ipv4) == "" {
-			return "", "", fmt.Errorf("missing IPv4 address for record type A")
-		}
-		return hcloud.ZoneRRSetTypeA, ipv4, nil
+		return hcloud.ZoneRRSetTypeA, nil
 	case "AAAA":
-		if strings.TrimSpace(ipv6) == "" {
-			return "", "", fmt.Errorf("missing IPv6 address for record type AAAA")
-		}
-		return hcloud.ZoneRRSetTypeAAAA, ipv6, nil
+		return hcloud.ZoneRRSetTypeAAAA, nil
 	default:
-		return "", "", fmt.Errorf("Unsupported record type: %s", t)
+		return "", fmt.Errorf("Unsupported record type: %s", t)
 	}
+}
+
+func mapRecordTypeAndIp(t, ipv4, ipv6 string) (hcloud.ZoneRRSetType, string, error) {
+	rrType, err := mapRecordType(t)
+	if err != nil {
+		return "", "", err
+	}
+
+	ip := ipv4
+	if rrType == hcloud.ZoneRRSetTypeAAAA {
+		ip = ipv6
+	}
+	if strings.TrimSpace(ip) == "" {
+		return "", "", fmt.Errorf("missing IP address for record type %s", rrType)
+	}
+
+	return rrType, ip, nil
 }
 
 func SetRecord(z config.DNSZone, r config.Record, ipv4, ipv6, token string, t int64) (*hcloud.Response, error) {
@@ -35,7 +46,7 @@ func SetRecord(z config.DNSZone, r config.Record, ipv4, ipv6, token string, t in
 	}
 
 	client := hcloud.NewClient(hcloud.WithToken(token))
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(t) * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(t)*time.Second)
 	defer cancel()
 
 	action, res, err := client.Zone.SetRRSetRecords(ctx, &hcloud.ZoneRRSet{
@@ -45,7 +56,7 @@ func SetRecord(z config.DNSZone, r config.Record, ipv4, ipv6, token string, t in
 	}, hcloud.ZoneRRSetSetRecordsOpts{
 		Records: []hcloud.ZoneRRSetRecord{
 			{
-				Value: ip,
+				Value:   ip,
 				Comment: r.Comment,
 			},
 		},
@@ -64,18 +75,23 @@ func SetRecord(z config.DNSZone, r config.Record, ipv4, ipv6, token string, t in
 
 func SetTTL(z config.DNSZone, r config.Record, token string, t int64) (*hcloud.Response, error) {
 
+	rrType, err := mapRecordType(r.RecordType)
+	if err != nil {
+		return nil, err
+	}
+
 	if r.TTL == 0 {
 		r.TTL = 3600
 	}
 
 	client := hcloud.NewClient(hcloud.WithToken(token))
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(t) * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(t)*time.Second)
 	defer cancel()
 
 	action, res, err := client.Zone.ChangeRRSetTTL(ctx, &hcloud.ZoneRRSet{
 		Zone: &hcloud.Zone{Name: z.Name},
 		Name: r.Name,
-		Type: hcloud.ZoneRRSetTypeA,
+		Type: rrType,
 	}, hcloud.ZoneRRSetChangeTTLOpts{
 		TTL: hcloud.Ptr(r.TTL),
 	})
