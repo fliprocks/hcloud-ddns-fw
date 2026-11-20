@@ -121,6 +121,8 @@ Address the DDNS update URL server listens on, as `<ip>:<port>` or `:<port>`. Us
 
 With `network_mode: host`, `:8080` listens on **every** interface of the host, possibly including public ones. Bind it to your LAN address instead, e.g. `192.168.0.123:8080`.
 
+In a Docker bridge network (e.g. behind a reverse proxy) use `:8080`. The host's LAN address does not exist inside the container, so the server would fail to start. See [Network mode and reverse proxy](#network-mode-and-reverse-proxy).
+
 ```bash
 UPDATE_URL_LISTEN: 192.168.0.123:8080
 # type: string
@@ -249,6 +251,47 @@ volumes:
   - ./state:/app/state
 ```
 
-‼️ The password is sent as a URL parameter in plain HTTP. Only expose it in your local network, e.g. by binding `UPDATE_URL_LISTEN` to your LAN address. ‼️
+‼️ The password is sent as a URL parameter in plain HTTP. Only expose it in your local network, e.g. by binding `UPDATE_URL_LISTEN` to your LAN address, or put a reverse proxy with HTTPS in front of it. ‼️
 
 An example can be found in [compose.updateUrl.yaml](./examples/compose.updateUrl.yaml).
+
+### Network mode and reverse proxy
+
+`network_mode: host` is only needed if the updater fetches IPv6 addresses itself (`IP_ADDRESS_SRC: apiUrl`). With `IP_ADDRESS_SRC: updateUrl` the addresses come from the update URL, and the updater only makes outgoing requests to the hcloud API, so a regular Docker bridge network is enough.
+
+A container in `network_mode: host` is not part of any Docker network, so a reverse proxy running in Docker can't reach it by its container or service name (`lookup ...: i/o timeout`, HTTP 502). Choose one of the following setups:
+
+**Updater in the reverse proxy's network (recommended with `IP_ADDRESS_SRC: updateUrl`)**
+
+No port is published, so the updater is only reachable through the reverse proxy and the password is only sent via HTTPS.
+
+```yaml
+services:
+  updater:
+    image: ghcr.io/fliprocks/hcloud-ddns-fw:latest
+    env_file: .env          # with UPDATE_URL_LISTEN=:8080
+    networks:
+      - proxy
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./state:/app/state
+    restart: always
+
+networks:
+  proxy:
+    external: true          # network of your reverse proxy, see docker network ls
+```
+
+Point the reverse proxy to the service on port 8080, e.g. with Caddy:
+
+```
+ddns.example.com {
+	reverse_proxy updater:8080
+}
+```
+
+**Updater in `network_mode: host`**
+
+Point the reverse proxy to the host's LAN address instead of the container name, e.g. `reverse_proxy 192.168.0.123:8080`. `UPDATE_URL_LISTEN` must be this address or `:8080`. The port is then also reachable via plain HTTP in your local network.
+
+Reverse proxies usually log the full request URI including the `pass` parameter. Consider filtering query parameters from the proxy logs.
